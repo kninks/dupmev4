@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './Component.css';
 import { io } from "socket.io-client";
-import Timer from './Timer';
 
 const socket = io("http://localhost:3000");
 
@@ -16,22 +15,28 @@ function Piano() {
         console.log(item);
     };
 
-    // Timer for sending notes
-    // const buttonRef = useRef<HTMLButtonElement | null>(null);
-    // useEffect(() => {
-    //     const timer = setTimeout(() => {
-    //         if (buttonRef.current) {
-    //             buttonRef.current.click();
-    //         }
-    //     }, 20000)
+    /// Timer for sending notes
+    const [secondsLeft, setSecondsLeft] = useState(10);
 
-    //     return () => clearTimeout(timer);
-    // }, [])
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setSecondsLeft((prevSecondsLeft) => {
+                if (prevSecondsLeft === 1) {
+                    sendNoteslist();
+                    clearInterval(timer);
+                    return 0;
+                }
+                return prevSecondsLeft - 1;
+            });
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, []);
 
     // Socket event for sending notes
     const sendNoteslist = () => {
-        console.log("submit button clicked")
-        socket.emit("send_noteslist", {noteslist});
+        console.log("Noteslist is sent", {noteslist:noteslist})
+        socket.emit("send_noteslist", {noteslist:noteslist});
     };
 
     // Received notes
@@ -50,6 +55,8 @@ function Piano() {
 
     return (
         <>
+            <h1>Seconds Left: {secondsLeft}</h1>
+            
             <h1>Piano</h1>
             <div className='piano-container'>
                 {allnotes.map((item) => (
@@ -65,8 +72,6 @@ function Piano() {
                     <div key={item.id}>{item.note}</div>
                 ))}
             </div>
-
-            <Timer onTimeout={handleTimeout} initialSeconds={10}/>
 
             <h1>Received</h1>
             <div className='piano-container'>
