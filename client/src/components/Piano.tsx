@@ -7,12 +7,22 @@ const socket = io("http://localhost:3000");
 function Piano() {
     const allnotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
-    // Sent notes
+    // Notes clicking
     const [noteslist, setNoteslist] = useState<{id: number, note: string}[]>([]);
     const handleClickNote = (item: string) => {
         const newNote = {id: noteslist.length, note:item};
-        setNoteslist([...noteslist, newNote]); //add in array
-        console.log(item);
+        setNoteslist([...noteslist, newNote]); //Add in array
+        // console.log(item);
+    };
+
+    useEffect(() => {
+        console.log("A note added", noteslist)
+    }, [noteslist])
+
+    // Socket event for sending notes
+    const sendNoteslist = () => {
+        console.log("Noteslist is sent", noteslist)
+        socket.emit("send_noteslist", noteslist);
     };
 
     /// Timer for sending notes
@@ -22,7 +32,7 @@ function Piano() {
         const timer = setInterval(() => {
             setSecondsLeft((prevSecondsLeft) => {
                 if (prevSecondsLeft === 1) {
-                    sendNoteslist();
+                    // sendNoteslist();
                     clearInterval(timer);
                     return 0;
                 }
@@ -33,25 +43,21 @@ function Piano() {
         return () => clearTimeout(timer);
     }, []);
 
-    // Socket event for sending notes
-    const sendNoteslist = () => {
-        console.log("Noteslist is sent", {noteslist:noteslist})
-        socket.emit("send_noteslist", {noteslist:noteslist});
-    };
+    useEffect(() => {
+        if (secondsLeft === 0) {
+            sendNoteslist();
+        }
+    }, [secondsLeft]);
 
     // Received notes
     const [noteslistReceived, setNoteslistReceived] = useState<{id: number, note: string}[]>([]);
 
     useEffect(() => {
         socket.on("receive_noteslist", (data) => {
-            setNoteslistReceived(data.noteslist);
+            setNoteslistReceived(data);
+            console.log("receive_noteslist", data)
         });
     }, [socket]);
-
-    // Call sendNoteslist when the countdown is over
-    const handleTimeout = () => {
-        sendNoteslist(); // Call sendNoteslist when the countdown is over
-      };
 
     return (
         <>
