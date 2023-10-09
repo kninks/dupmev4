@@ -30,7 +30,7 @@ function Piano() {
 
     // Socket event for sending notes
     const sendNoteslist = () => {
-        console.log("submit button clicked")
+        console.log("Noteslist is sent", {noteslist})
         socket.emit("send_noteslist", {noteslist});
     };
 
