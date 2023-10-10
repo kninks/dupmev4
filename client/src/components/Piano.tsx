@@ -46,6 +46,7 @@ function Piano() {
     useEffect(() => {
         if (secondsLeft === 0) {
             sendNoteslist();
+            setNoteslist([]);
         }
     }, [secondsLeft]);
 
@@ -57,6 +58,7 @@ function Piano() {
             setNoteslistReceived(data);
             console.log("receive_noteslist", data);
             setSecondsLeft(20);
+            setNoteslist([]);
         });
     }, [socket]);
 
