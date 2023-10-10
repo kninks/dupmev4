@@ -55,7 +55,8 @@ function Piano() {
     useEffect(() => {
         socket.on("receive_noteslist", (data) => {
             setNoteslistReceived(data);
-            console.log("receive_noteslist", data)
+            console.log("receive_noteslist", data);
+            setSecondsLeft(20);
         });
     }, [socket]);
 
