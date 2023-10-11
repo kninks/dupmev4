@@ -1,37 +1,83 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Component.css';
 import { io } from "socket.io-client";
-import Timer from './Timer';
 
 const socket = io("http://localhost:3000");
 
 function Piano() {
     const allnotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-
-    // Sent notes
     const [noteslist, setNoteslist] = useState<{id: number, note: string}[]>([]);
+
+    //handle p1 start
+    const handleStart = () => {
+        setCountdown10(10);
+        setStartCountdown10(true);
+        setNoteslist([]);
+    }
+
+    // Notes clicking
     const handleClickNote = (item: string) => {
-        const newNote = {id: noteslist.length, note:item};
-        setNoteslist([...noteslist, newNote]); //add in array
-        console.log(item);
+    const newNote = {id: noteslist.length, note:item};
+    setNoteslist([...noteslist, newNote]); //Add in array
+    // console.log(item);
     };
 
-    // Timer for sending notes
-    // const buttonRef = useRef<HTMLButtonElement | null>(null);
-    // useEffect(() => {
-    //     const timer = setTimeout(() => {
-    //         if (buttonRef.current) {
-    //             buttonRef.current.click();
-    //         }
-    //     }, 20000)
+    useEffect(() => {
+        console.log("A note added", noteslist)
+    }, [noteslist])
 
-    //     return () => clearTimeout(timer);
-    // }, [])
+    // Set coundown
+    const [countdown10, setCountdown10] = useState(10);
+    const [countdown20, setCountdown20] = useState(20);
+    const [startCountdown10, setStartCountdown10] = useState(false);
+    const [startCountdown20, setStartCountdown20] = useState(false);
+
+    useEffect (() => {
+        if (startCountdown10) {
+            if (countdown10 === 0) {
+                sendNoteslist();
+            }
+            const interval10 = setInterval(() => {
+                setCountdown10((prevCount10) => {
+                    if (prevCount10 <= 1) {
+                        clearInterval(interval10);
+                        return 0;
+                    };
+                    return prevCount10 - 1;
+                });
+            }, 1000);
+
+            return () => {
+                clearInterval(interval10);
+            };
+        }
+    }, [startCountdown10, countdown10]);
+
+    useEffect(() => {
+        if (startCountdown20) {
+            if (countdown20 === 0) {
+                checkNotelist(noteslistReceived, noteslist);
+            }
+            const interval20 = setInterval(() => {
+                setCountdown20((prevCount20) => {
+                    if (prevCount20 <= 1) {
+                        clearInterval(interval20);
+                        return 0;
+                    };
+                    return prevCount20 - 1;
+                });
+            }, 1000);
+    
+            return () => {
+                clearInterval(interval20);
+            };
+        }
+    }, [startCountdown20, countdown20])
 
     // Socket event for sending notes
     const sendNoteslist = () => {
-        console.log("Noteslist is sent", {noteslist})
-        socket.emit("send_noteslist", {noteslist});
+        console.log("Noteslist is sent", noteslist)
+        socket.emit("send_noteslist", noteslist);
     };
 
     // Received notes
@@ -39,17 +85,39 @@ function Piano() {
 
     useEffect(() => {
         socket.on("receive_noteslist", (data) => {
-            setNoteslistReceived(data.noteslist);
+            setNoteslistReceived(data);
+            console.log("receive_noteslist", data);
+            setNoteslist([]);
+            setCountdown20(20);
+            setStartCountdown20(true);
         });
     }, [socket]);
 
-    // Call sendNoteslist when the countdown is over
-    const handleTimeout = () => {
-        sendNoteslist(); // Call sendNoteslist when the countdown is over
-      };
+    // Score checking
+    const [score, setScore] = useState(0)
+
+    const checkNotelist = (arrayReceived: {id: number, note: string}[], arraySubmit: {id: number, note: string}[]) => {
+        const maxLenght = Math.max(arrayReceived.length, arraySubmit.length);
+        console.log("checkNotelist", arrayReceived, arraySubmit, maxLenght);
+
+        let updatedScore = score;
+
+        for (let i = 0; i < maxLenght; i++) {
+            if (arrayReceived[i].id === arraySubmit[i].id && arrayReceived[i].note === arraySubmit[i].note) {
+                updatedScore++;
+                console.log(`same at index ${i}:`, updatedScore);
+            }
+        };
+
+        setScore(updatedScore);
+    };
 
     return (
         <>
+            <h1>p1 Seconds Left: {countdown10}</h1>
+            <h1>p2 Seconds Left: {countdown20}</h1>
+            <p>score: {score}</p>
+            <button onClick={handleStart}>start !</button>
             <h1>Piano</h1>
             <div className='piano-container'>
                 {allnotes.map((item) => (
@@ -65,8 +133,6 @@ function Piano() {
                     <div key={item.id}>{item.note}</div>
                 ))}
             </div>
-
-            <Timer onTimeout={handleTimeout} initialSeconds={10}/>
 
             <h1>Received</h1>
             <div className='piano-container'>
