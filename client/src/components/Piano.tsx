@@ -8,6 +8,13 @@ function Piano() {
     const allnotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     const [noteslist, setNoteslist] = useState<{id: number, note: string}[]>([]);
 
+    //handle p1 start
+    const handleStart = () => {
+        setCountdown10(10);
+        setStartCountdown10(true);
+        setNoteslist([]);
+    }
+
     // Notes clicking
     const handleClickNote = (item: string) => {
     const newNote = {id: noteslist.length, note:item};
@@ -22,26 +29,29 @@ function Piano() {
     // Set coundown
     const [countdown10, setCountdown10] = useState(10);
     const [countdown20, setCountdown20] = useState(20);
+    const [startCountdown10, setStartCountdown10] = useState(false);
     const [startCountdown20, setStartCountdown20] = useState(false);
 
     useEffect (() => {
-        if (countdown10 === 0) {
-            sendNoteslist();
-        }
-        const interval10 = setInterval(() => {
-            setCountdown10((prevCount10) => {
-                if (prevCount10 <= 1) {
-                    clearInterval(interval10);
-                    return 0;
-                };
-                return prevCount10 - 1;
-            });
-        }, 1000);
+        if (startCountdown10) {
+            if (countdown10 === 0) {
+                sendNoteslist();
+            }
+            const interval10 = setInterval(() => {
+                setCountdown10((prevCount10) => {
+                    if (prevCount10 <= 1) {
+                        clearInterval(interval10);
+                        return 0;
+                    };
+                    return prevCount10 - 1;
+                });
+            }, 1000);
 
-        return () => {
-            clearInterval(interval10);
-        };
-    }, [countdown10]);
+            return () => {
+                clearInterval(interval10);
+            };
+        }
+    }, [startCountdown10, countdown10]);
 
     useEffect(() => {
         if (startCountdown20) {
@@ -78,6 +88,7 @@ function Piano() {
             setNoteslistReceived(data);
             console.log("receive_noteslist", data);
             setNoteslist([]);
+            setCountdown20(20);
             setStartCountdown20(true);
         });
     }, [socket]);
@@ -106,7 +117,7 @@ function Piano() {
             <h1>p1 Seconds Left: {countdown10}</h1>
             <h1>p2 Seconds Left: {countdown20}</h1>
             <p>score: {score}</p>
-            
+            <button onClick={handleStart}>start !</button>
             <h1>Piano</h1>
             <div className='piano-container'>
                 {allnotes.map((item) => (
