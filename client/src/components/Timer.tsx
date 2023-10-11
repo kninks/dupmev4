@@ -1,30 +1,28 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 
 interface Props {
-    onTimeout: () => void;
-    initialSeconds: number;
-}
+    duration: number;
+  }
 
-function Timer({onTimeout, initialSeconds}: Props) {
-    const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+function Timer({duration}: Props) {
+    const [countdown, setCountdown] = useState(duration);
 
-    useEffect(() =>  {
-        const intervalId = setInterval(() => {
-            setSecondsLeft((prevSecondsLeft) => prevSecondsLeft - 1);
-            if (secondsLeft === 1) {
-                clearInterval(intervalId);
-                onTimeout();
-            }
-        }, 1000)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCountdown((prevCount) => {
+                if (prevCount <= 1) {
+                    clearInterval(interval);
+                    return 0;
+                };
+                return prevCount - 1;
+            });
+        }, 1000);
+        return () => {
+            clearInterval(interval);
+        };
+    }, [countdown])
 
-        return () => clearInterval(intervalId);
-    }, [secondsLeft, onTimeout])
-
-    return (
-        <>
-            Seconds Left: {secondsLeft}
-        </>
-    )
+    return ({countdown})
 }
 
 export default Timer
