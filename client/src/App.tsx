@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 import Piano from './components/Piano';
 import Countdown from './components/Countdown';
 import Timer from './components/Timer';
+import PianoP1 from './components/PianoP1';
 
 const socket = io("http://localhost:3000");
 
@@ -17,7 +18,7 @@ function App() {
 
     <div className="App">
       {/* <Piano /> */}
-      <><Countdown duration={3} onTimeout={() => console.log("Timeout function called in ParentComponent")} /></>
+      <PianoP1 />
     </div>
   )
 }
