@@ -3,14 +3,14 @@ import React, { useEffect, useState } from 'react'
 interface Props {
     duration: number;
     onTimeout: () => void; 
-    isRunning: boolean;
+    running: boolean;
 }
 
-function Countdown({ duration, isRunning, onTimeout }: Props) {
+function Countdown({ duration, running, onTimeout }: Props) {
     const [countdown, setCountdown] = useState(duration);
 
     useEffect(() => {
-        if (isRunning) {
+        if (running) {
             if (countdown === 0) {
                 onTimeout();
             }
@@ -28,7 +28,7 @@ function Countdown({ duration, isRunning, onTimeout }: Props) {
             };
         }
         
-    }, [isRunning, countdown])
+    }, [running, countdown])
 
     return (
         <>{countdown}</>

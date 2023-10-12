@@ -11,7 +11,6 @@ const io = new Server(server, {
     cors: {
         origin: "http://localhost:5173",
         methods: ["GET", "POST"],
-
     }
 })
 
@@ -22,8 +21,9 @@ io.on("connection", (socket) => {
     //     socket.join(data);
     // })
 
-    socket.on("send_noteslist", (data) => {
-        socket.broadcast.emit("receive_noteslist", data)
+    socket.on("send_notelist", (data) => {
+        socket.broadcast.emit("receive_notelist", data)
+        console.log("receive_notelist", data)
     })
 })
 

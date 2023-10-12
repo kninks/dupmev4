@@ -8,10 +8,12 @@ const socket = io("http://localhost:3000");
 function PianoP1() {
     const allnotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     const [notelist, setNotelist] = useState<{id: number, note: string}[]>([]);
+    const [isRunning, setIsRunning] = useState(false);
 
     //handle P1 ready
-    const handleReady = () => {
-        console.log("P1 ready");
+    const handleStart = () => {
+        console.log("P1 start");
+        setIsRunning(true);
     };
 
     // Notes clicking
@@ -25,15 +27,18 @@ function PianoP1() {
     }, [notelist])
 
     // Socket event for sending notes
-    const sendNoteslist = () => {
+    const sendNotelist = () => {
         console.log("Notelist is sent", notelist)
         socket.emit("send_notelist", notelist);
     };
 
     return (
         <>
-        <h1>PianoP1</h1>
-        <p>P1 Seconds left:</p> <Countdown duration={10} isRunning={true} onTimeout={() => sendNoteslist()} />
+        <h1>Piano P1</h1>
+        <p>P1 Seconds left:</p> 
+        <Countdown duration={10} running={isRunning} onTimeout={() => sendNotelist()} />
+
+        <button onClick={handleStart}>Start</button>
 
         <div className='piano-container'>
             {allnotes.map((item) => (

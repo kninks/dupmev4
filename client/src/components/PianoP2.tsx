@@ -8,6 +8,7 @@ const socket = io("http://localhost:3000");
 function PianoP2() {
     const allnotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     const [notelist, setNotelist] = useState<{id: number, note: string}[]>([]);
+    const [isRunning, setIsRunning] = useState(false);
 
     //handle P2 ready
     const handleReady = () => {
@@ -28,18 +29,21 @@ function PianoP2() {
     const [notelistReceived, setNotelistReceived] = useState<{id: number, note: string}[]>([]);
 
     useEffect(() => {
-        socket.on("receive_noteslist", (data) => {
+        socket.on("receive_notelist", (data) => {
             setNotelistReceived(data);
-            console.log("receive_noteslist", data);
+            console.log("receive_notelist", data);
+            setIsRunning(true);
             setNotelist([]);
         });
     }, [socket]);
 
     // Scoring
+    const [score, setScore] = useState(0)
+    
     const checkNotelist = () => {
         console.log("Checked")
     }
-    // const [score, setScore] = useState(0)
+    
 
     // const checkNotelist = (arrayReceived: {id: number, note: string}[], arraySubmit: {id: number, note: string}[]) => {
     //     const maxLenght = Math.max(arrayReceived.length, arraySubmit.length);
@@ -60,15 +64,16 @@ function PianoP2() {
 
     return (
         <>
-        <h1>PianoP1</h1>
-        <p>P1 Seconds left:</p> <Countdown duration={10} isRunning={false} onTimeout={() => checkNotelist()} />
-
         <h1>Received</h1>
             <div className='piano-container'>
                 {notelistReceived.map((item) => (
                     <div key={item.id}>{item.note}</div>
                 ))}
             </div>
+
+        <h1>Piano P2</h1>
+        <p>P1 Seconds left:</p> <Countdown duration={20} running={isRunning} onTimeout={() => checkNotelist()} />
+
 
         <div className='piano-container'>
             {allnotes.map((item) => (
