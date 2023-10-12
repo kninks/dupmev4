@@ -39,41 +39,29 @@ function PianoP2() {
 
     // Scoring
     const [score, setScore] = useState(0)
-    
-    const checkNotelist = () => {
-        console.log("Checked")
-    }
-    
 
-    // const checkNotelist = (arrayReceived: {id: number, note: string}[], arraySubmit: {id: number, note: string}[]) => {
-    //     const maxLenght = Math.max(arrayReceived.length, arraySubmit.length);
-    //     console.log("checkNotelist", arrayReceived, arraySubmit, maxLenght);
+    const checkNotelist = (arrayReceived: {id: number, note: string}[], arraySubmit: {id: number, note: string}[]) => {
+        const maxLenght = Math.max(arrayReceived.length, arraySubmit.length);
+        console.log("checkNotelist", arrayReceived, arraySubmit, maxLenght);
 
-    //     let updatedScore = score;
+        let updatedScore = score;
 
-    //     for (let i = 0; i < maxLenght; i++) {
-    //         if (arrayReceived[i].id === arraySubmit[i].id && arrayReceived[i].note === arraySubmit[i].note) {
-    //             updatedScore++;
-    //             console.log(`same at index ${i}:`, updatedScore);
-    //         }
-    //     };
+        for (let i = 0; i < maxLenght; i++) {
+            if (arrayReceived[i].id === arraySubmit[i].id && arrayReceived[i].note === arraySubmit[i].note) {
+                updatedScore++;
+                console.log(`same at index ${i}:`, updatedScore);
+            }
+        };
 
-    //     setScore(updatedScore);
-    // };
+        setScore(updatedScore);
+    };
 
 
     return (
         <>
-        <h1>Received</h1>
-            <div className='piano-container'>
-                {notelistReceived.map((item) => (
-                    <div key={item.id}>{item.note}</div>
-                ))}
-            </div>
 
         <h1>Piano P2</h1>
-        <p>P1 Seconds left:</p> <Countdown duration={20} running={isRunning} onTimeout={() => checkNotelist()} />
-
+        <p>P1 Seconds left:</p> <Countdown duration={20} running={isRunning} onTimeout={() => checkNotelist(notelistReceived, notelist)} />
 
         <div className='piano-container'>
             {allnotes.map((item) => (
@@ -86,6 +74,13 @@ function PianoP2() {
         <h1>Display</h1>
         <div className='piano-container'>
             {notelist.map((item) => (
+                <div key={item.id}>{item.note}</div>
+            ))}
+        </div>
+
+        <h1>Received</h1>
+        <div className='piano-container'>
+            {notelistReceived.map((item) => (
                 <div key={item.id}>{item.note}</div>
             ))}
         </div>
