@@ -40,12 +40,12 @@ function PianoP2() {
     const [score, setScore] = useState(0)
 
     const checkNotelist = (arrayReceived: {id: number, note: string}[], arraySubmit: {id: number, note: string}[]) => {
-        const maxLenght = Math.max(arrayReceived.length, arraySubmit.length);
-        console.log("checkNotelist", arrayReceived, arraySubmit, maxLenght);
+        const minLenght = Math.min(arrayReceived.length, arraySubmit.length);
+        console.log("checkNotelist", arrayReceived, arraySubmit, minLenght);
 
         let updatedScore = score;
 
-        for (let i = 0; i < maxLenght; i++) {
+        for (let i = 0; i < minLenght; i++) {
             if (arrayReceived[i].id === arraySubmit[i].id && arrayReceived[i].note === arraySubmit[i].note) {
                 updatedScore++;
                 console.log(`same at index ${i}:`, updatedScore);
@@ -55,12 +55,12 @@ function PianoP2() {
         setScore(updatedScore);
     };
 
-
     return (
         <>
-
         <h1>Piano P2</h1>
         <p>P1 Seconds left:</p> <Countdown duration={20} running={isRunning} onTimeout={() => checkNotelist(notelistReceived, notelist)} />
+
+        <p>score: {score}</p>
 
         <div className='piano-container'>
             {allnotes.map((item) => (

@@ -1,5 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import socket from '../socket';
+import PianoP1 from './PianoP1';
+import PianoP2 from './PianoP2';
 
 function Users() {
     const [users, setUsers] = useState<{id: number, name: string}[]>([]);
@@ -37,10 +39,13 @@ function Users() {
         <>
         <h1>Welcome !</h1>
         <div>{isConnected ? ( <>
+            <h2>{name}</h2>
             <h3>Current players: {users.length}</h3>
             {users.map((item) => (
                 <div key={item.id}>{item.id}, {item.name}</div>
             ))}
+            <PianoP1 />
+            <PianoP2 />
         </> ) : ( <>
             <input 
                 type='text'

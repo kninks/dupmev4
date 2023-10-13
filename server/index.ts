@@ -18,7 +18,7 @@ const users: {id: string, name: string}[] = [];
 
 io.on("connection", (socket) => {
     // Connection -------------------------------------
-    console.log(`Boombayah connected: ${socket.id}`)
+    console.log(`Bombastic connected: ${socket.id}`)
 
     socket.on("submit_name", (data) => {
         const user = {id: socket.id, name: data};
