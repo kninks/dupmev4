@@ -14,8 +14,35 @@ const io = new Server(server, {
     }
 })
 
+const users: {id: string, name: string}[] = [];
+
 io.on("connection", (socket) => {
+    // Connection -------------------------------------
     console.log(`Boombayah connected: ${socket.id}`)
+
+    socket.on("submit_name", (data) => {
+        const user = {id: socket.id, name: data};
+        users.push(user);
+        console.log(users);
+
+        // Send the list of connected users to the client
+        io.emit('users', users);
+    });
+
+    socket.on('disconnect', () => {
+        console.log(`User disconnected: ${socket.id}`);
+
+        // Remove the user from the connected users array
+        const index = users.findIndex((user) => user.id === socket.id);
+        if (index !== -1) {
+            users.splice(index, 1);
+        }
+        console.log(users);
+
+        // Send the updated list of connected users to all clients
+        io.emit('users', users);
+    });
+    // -------------------------------------
 
     // socket.on("join_room", (data) => {
     //     socket.join(data);
@@ -28,5 +55,5 @@ io.on("connection", (socket) => {
 })
 
 server.listen(3000, () => {
-    console.log("Boombayah is running");
+    console.log("Boombayah is running on http://localhost:3000");
 })

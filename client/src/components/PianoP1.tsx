@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import './Component.css';
-import { io } from "socket.io-client";
+import socket from '../socket';
 import Countdown from './Countdown';
-
-const socket = io("http://localhost:3000");
 
 function PianoP1() {
     const allnotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
