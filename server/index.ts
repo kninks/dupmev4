@@ -15,10 +15,6 @@ const io = new Server(server, {
     }
 })
 
-<<<<<<< Updated upstream
-io.on("connection", (socket) => {
-    console.log(`Boombayah connected: ${socket.id}`)
-=======
 // Connection
 const users: {id: string, name: string}[] = [];
 
@@ -78,7 +74,6 @@ io.on("connection", (socket) => {
             console.log("User not found");
         }
     })
->>>>>>> Stashed changes
 
     // socket.on("join_room", (data) => {
     //     socket.join(data);
@@ -102,15 +97,10 @@ io.on("connection", (socket) => {
     //     io.to(data).emit('players_in_room', playersInRoom);
     // })
 
-<<<<<<< Updated upstream
-    socket.on("send_noteslist", (data) => {
-        socket.broadcast.emit("receive_noteslist", data)
-=======
     // Each turn -------------------------------------
     socket.on("send_notelist", (data) => {
         console.log("receive_notelist", data)
         socket.to(data.room).emit("receive_notelist", data);
->>>>>>> Stashed changes
     })
 
     // -------------------------------------
