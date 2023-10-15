@@ -1,31 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react'
 
-interface CountdownProps {
-  initialSeconds: number;
+interface Props {
+    duration: number;
+    onTimeout: () => void; 
+    running: boolean;
 }
 
-const Countdown: React.FC<CountdownProps> = ({ initialSeconds }) => {
-  const [seconds, setSeconds] = useState(initialSeconds);
+function Countdown({ duration, running, onTimeout }: Props) {
+    const [countdown, setCountdown] = useState(duration);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (seconds > 0) {
-        setSeconds(seconds - 1);
-      } else {
-        clearInterval(interval);
-      }
-    }, 1000);
+    useEffect(() => {
+        if (running) {
+            if (countdown === 0) {
+                onTimeout();
+            }
+            const interval = setInterval(() => {
+                setCountdown((prevCount) => {
+                    if (prevCount <= 1) {
+                        clearInterval(interval);
+                        return 0;
+                    };
+                    return prevCount - 1;
+                });
+            }, 1000);
+            return () => {
+                clearInterval(interval);
+            };
+        }
+        
+    }, [running, countdown])
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [seconds]);
+    return (
+        <>{countdown}</>
+    )
+}
 
-  return (
-    <div>
-      <h1>{seconds} seconds</h1>
-    </div>
-  );
-};
-
-export default Countdown;
+export default Countdown
