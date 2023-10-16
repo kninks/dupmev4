@@ -15,7 +15,7 @@ const io = new Server(server, {
 })
 
 // Conection
-const users: {sid: string, name: string, room: string}[] = [];
+const users: {sid: string, name: string}[] = [];
 
 // Join a room
 const rooms: {roomId: string, players:{sid: string, name: string, score: number, P1: boolean, round: number}[]}[] = [];
@@ -25,7 +25,7 @@ io.on("connection", (socket) => {
     console.log(`Boombayah connected: ${socket.id}`)
 
     socket.on("submit_name", (data) => {
-        const user = {sid: socket.id, name: data, room:"main"};
+        const user = {sid: socket.id, name: data};
         users.push(user);
         console.log("users: ");
         console.log(users);
@@ -57,19 +57,23 @@ io.on("connection", (socket) => {
         // console.log(`${socket.id} join_room ${data}`);
 
         // Update the room property for the user in the users array
-        const userIndex = users.findIndex((user) => user.sid === socket.id);
-        if (userIndex !== -1) {
-            users[userIndex].room = data;
+        const user = users.find((user) => user.sid === socket.id);
+        const player = {sid: user?.sid || "", name: user?.name || "", score: 0, P1: false, round: 0}
+        const foundRoom = rooms.find((room) => room.roomId === data)
+        if (foundRoom) {
+            foundRoom.players.push(player)
+        } else {
+            rooms.push({roomId: data, players:[player]})
         }
 
-        console.log("users: ");
-        console.log(users);
+        console.log("rooms: ");
+        console.log(rooms);
 
         // Send the list of players in the room to the client who entered the room
-        const playersInRoom = users.filter((user) => user.room === data);
-        io.to(socket.id).emit('players_in_room', playersInRoom);
-        // console.log(`players in room ${data} =`)
-        // console.log(playersInRoom)
+        // const playersInRoom = users.filter((user) => user.room === data);
+        const playersInRoom = foundRoom?.players;
+        console.log(`players in room ${data} =`)
+        console.log(playersInRoom)
 
         // Broadcasting the list of players in the room to all users in the room
         io.to(data).emit('players_in_room', playersInRoom);
