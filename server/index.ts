@@ -59,11 +59,12 @@ io.on("connection", (socket) => {
         // Update the room property for the user in the users array
         const user = users.find((user) => user.sid === socket.id);
         const player = {sid: user?.sid || "", name: user?.name || "", score: 0, P1: false, round: 0}
-        const foundRoom = rooms.find((room) => room.roomId === data)
+        let foundRoom = rooms.find((room) => room.roomId === data)
         if (foundRoom) {
             foundRoom.players.push(player)
         } else {
-            rooms.push({roomId: data, players:[player]})
+            foundRoom = {roomId: data, players:[player]}
+            rooms.push(foundRoom)
         }
 
         console.log("rooms: ");
