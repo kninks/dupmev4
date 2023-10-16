@@ -110,14 +110,15 @@ io.on("connection", (socket) => {
         socket.to(data.room).emit("receive_notelist", data);
     })
 
-    socket.on("end_turn", (data) => {
-        console.log(`end_turn: ${data}`)
+    socket.on("end_game", (data) => {
+        console.log(`end_game: ${data}`)
         // set score
     })
 
     socket.on("end_round", (data) => {
         // set score
-        io.to("room").emit("scores of both players in this round", "scores whatever");
+        io.to(data.room).emit("start_round", "scores whatever");
+        console.log(data)
     })
 
 
