@@ -48,6 +48,54 @@ function Piano({roomId}: Props) {
         setIsCreating(false);
     };
 
+    // Scoring
+    const checkNotelist = (arrayReceived: {id: number, note: string}[], arraySubmit: {id: number, note: string}[]) => {
+        const minLenght = Math.min(arrayReceived.length, arraySubmit.length);
+        console.log("checkNotelist", arrayReceived, arraySubmit, minLenght);
+
+        let updatedScore = score;
+        for (let i = 0; i < minLenght; i++) {
+            if (arrayReceived[i].id === arraySubmit[i].id && arrayReceived[i].note === arraySubmit[i].note) {
+                updatedScore++;
+            }
+        };
+        setScore(updatedScore);
+        setIsFollowing(false);
+
+        if (isP1) {
+            if (round === 2) {
+                socket.emit("end_game", `${roomId} game ends`);
+            } else {
+                socket.emit("end_round", {roomId: roomId, round: round});
+                setRound(round + 1);
+            }
+        } else {
+            // end turn
+            setNotelist([]);
+            setIsCreating(true);
+        }
+    };
+
+    // Socket sent
+    const socketResetGame = () => {
+        socket.emit("reset", roomId)
+        console.log(`${roomId} reset game`)
+    };
+
+    const resetGame = () => {
+        setNotelist([]);
+        setIsP1(false);
+        setRound(1);
+        setCreateDuration(10);
+        setFollowDuration(20);
+        setIsCreating(false);
+        setIsFollowing(false);
+        setNotelistReceived([]);
+        setScore(0);
+        setCountdownKey(countdownKey + 1);
+        console.log('reset game')
+    }
+
     // Socket event for
     useEffect(() => {
         // Starting the game after both are ready
@@ -78,35 +126,13 @@ function Piano({roomId}: Props) {
             // setIsReady(true);
             setIsFollowing(true);
         });
+
+        socket.on("receive_reset", (data) => {
+            resetGame()
+        })
     }, [socket]);
 
-    // Scoring
-    const checkNotelist = (arrayReceived: {id: number, note: string}[], arraySubmit: {id: number, note: string}[]) => {
-        const minLenght = Math.min(arrayReceived.length, arraySubmit.length);
-        console.log("checkNotelist", arrayReceived, arraySubmit, minLenght);
-
-        let updatedScore = score;
-        for (let i = 0; i < minLenght; i++) {
-            if (arrayReceived[i].id === arraySubmit[i].id && arrayReceived[i].note === arraySubmit[i].note) {
-                updatedScore++;
-            }
-        };
-        setScore(updatedScore);
-        setIsFollowing(false);
-
-        if (isP1) {
-            if (round === 2) {
-                socket.emit("end_game", "this game ends");
-            } else {
-                socket.emit("end_round", {roomId: roomId, round: round});
-                setRound(round + 1);
-            }
-        } else {
-            // end turn
-            setNotelist([]);
-            setIsCreating(true);
-        }
-    };
+    
 
     return (
         <>
@@ -123,6 +149,7 @@ function Piano({roomId}: Props) {
             <Countdown duration={3} running={isCurrentPlayer} onTimeout={() => {setIsCreating(true)}} /> */}
             
             <button onClick={handleStart}>Start</button>
+            <button onClick={socketResetGame}>Reset</button>
         
             <p>Create a pattern:</p> 
             <Countdown key={`create_${countdownKey}`} duration={createDuration} running={isCreating || isP1} onTimeout={() => sendNotelist()} />

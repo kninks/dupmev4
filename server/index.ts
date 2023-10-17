@@ -129,17 +129,21 @@ io.on("connection", (socket) => {
         socket.to(data.roomId).emit("receive_notelist", data);
     })
 
-    socket.on("end_game", (data) => {
-        console.log(`end_game: ${data}`)
-        // set score
-    })
-
     socket.on("end_round", (data) => {
         // set score
         io.to(data.roomId).emit("start_round", "next round start!");
         console.log(data)
     })
 
+    socket.on("end_game", (data) => {
+        console.log(`end_game: ${data}`)
+        // set score
+    })
+
+    socket.on("reset", (data) => {
+        io.to(data).emit("receive_reset", "")
+        console.log(`${data} reset game`)
+    })
     // -------------------------------------
 })
 
