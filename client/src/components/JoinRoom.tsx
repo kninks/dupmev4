@@ -40,7 +40,7 @@ function JoinRoom() {
         <div>{enteredRoom ? (<>
             <p>room: {roomId}</p>
             {playersInRoom.map((item) => (
-                <div key={item.sid}>{item.sid}, {item.name}</div>
+                <div key={item.sid}>{item.sid}, {item.name}, {item.roomId}, {item.score}</div>
             ))}
             <button>leave this room</button>
             <Piano roomId={roomId}/>

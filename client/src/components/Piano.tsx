@@ -132,14 +132,12 @@ function Piano({roomId}: Props) {
         })
     }, [socket]);
 
-    
-
     return (
         <>
             <div className='piano-container'>
             {allnotes.map((item) => (
                 <div key={item} onClick={() => {handleClickNote(item);}}>
-                    {item}
+                    <div>{item}</div>
                 </div>
             ))}
             </div>
@@ -158,7 +156,7 @@ function Piano({roomId}: Props) {
             <h1>Display</h1>
             <div className='piano-container'>
                 {notelist.map((item) => (
-                    <div key={item.id}>{item.note}</div>
+                    <div key={item.id}><div>{item.note}</div></div>
                 ))}
             </div>
             <p>Waiting for ... to create a pattern</p>
@@ -169,7 +167,7 @@ function Piano({roomId}: Props) {
             <h1>Received</h1>
             <div className='piano-container'>
                 {notelistReceived.map((item) => (
-                    <div key={item.id}>{item.note}</div>
+                    <div key={item.id}><div>{item.note}</div></div>
                 ))}
             </div>
 
