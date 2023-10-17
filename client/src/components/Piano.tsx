@@ -4,10 +4,10 @@ import Countdown from "./Countdown";
 import socket from "../socket";
 
 interface Props {
-  room: string;
+  roomId: string;
 }
 
-function Piano({room}: Props) {
+function Piano({roomId}: Props) {
     const allnotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     const [notelist, setNotelist] = useState<{id: number, note: string}[]>([]);
 
@@ -16,7 +16,7 @@ function Piano({room}: Props) {
 
     // const [isReady, setIsReady] = useState(false)
     // const [readyDuration, setReadyDuration] = useState(3);
-    
+    const [countdownKey, setCountdownKey] = useState(0);
     const [createDuration, setCreateDuration] = useState(10);
     const [isCreating, setIsCreating] = useState(false);
     const [followDuration, setFollowDuration] = useState(20);
@@ -31,24 +31,18 @@ function Piano({room}: Props) {
         setNotelist([...notelist, newNote]); //Add in array
     };
 
-    useEffect(() => {
-        console.log("A note added", notelist)
-    }, [notelist])
-
     // First Player can start creating pattern
     const handleStart = () => {
         setIsP1(true);
         setNotelist([]);
         // setReadyDuration(3);
-        setCreateDuration(10);
-        setFollowDuration(20);
         // setIsReady(true);
     };
 
     // Socket event for sending notes
     const sendNotelist = () => {
-        socket.emit("send_notelist", { room, notelist: notelist });
-        console.log("Notelist is sent", { room, notelist: notelist });
+        socket.emit("send_notelist", { roomId, notelist: notelist });
+        console.log("Notelist is sent", { roomId, notelist: notelist });
 
         setNotelist([]);
         setIsCreating(false);
@@ -60,23 +54,19 @@ function Piano({room}: Props) {
         socket.on("start_game", (data) => {
             setIsP1(true);
             setNotelist([]);
-            // setReadyDuration(3);
-            setCreateDuration(10);
-            setFollowDuration(20);   
+            // setReadyDuration(3);   
             // setIsReady(true);
         })
 
         socket.on("start_round", (data) => {
             setNotelist([]);
             // setReadyDuration(3);
-            setCreateDuration(10);
-            setFollowDuration(20);   
+            setCountdownKey(countdownKey + 1); 
             // setIsReady(true);
             setIsCreating(false);
             setIsFollowing(false);
 
             console.log("start_round", data);
-            console.log(createDuration, followDuration);
         })
 
         // Receiving notes
@@ -108,7 +98,7 @@ function Piano({room}: Props) {
             if (round === 2) {
                 socket.emit("end_game", "this game ends");
             } else {
-                socket.emit("end_round", {room: room, round: round});
+                socket.emit("end_round", {roomId: roomId, round: round});
                 setRound(round + 1);
             }
         } else {
@@ -135,7 +125,7 @@ function Piano({room}: Props) {
             <button onClick={handleStart}>Start</button>
         
             <p>Create a pattern:</p> 
-            <Countdown duration={createDuration} running={isCreating || isP1} onTimeout={() => sendNotelist()} />
+            <Countdown key={`create_${countdownKey}`} duration={createDuration} running={isCreating || isP1} onTimeout={() => sendNotelist()} />
             <p></p>
             
             <h1>Display</h1>
@@ -147,7 +137,7 @@ function Piano({room}: Props) {
             <p>Waiting for ... to create a pattern</p>
 
             <p>Follow the pattern: </p>
-            <Countdown duration={followDuration} running={isFollowing} onTimeout={() => checkNotelist(notelistReceived, notelist)} />
+            <Countdown key={`follow_${countdownKey}`} duration={followDuration} running={isFollowing} onTimeout={() => checkNotelist(notelistReceived, notelist)} />
             
             <h1>Received</h1>
             <div className='piano-container'>
