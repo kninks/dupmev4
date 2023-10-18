@@ -2,197 +2,188 @@ import React, { useEffect, useState } from "react";
 import "./Component.css";
 import Countdown from "./Countdown";
 import socket from "../socket";
+import ScoreBoard from "./ScoreBoard";
 
 interface Props {
   roomId: string;
 }
 
-function Piano({roomId}: Props) {
-    const allnotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-    const [notelist, setNotelist] = useState<{id: number, note: string}[]>([]);
-    const [activeIndex, setActiveIndex] = useState(0);
+function Piano({ roomId }: Props) {
+  const allnotes = ["C", "D", "E", "F", "G", "A", "B"];
+  const [notelist, setNotelist] = useState<{ id: number; note: string }[]>([]);
 
-    const [isP1, setIsP1] = useState(false); //mod1
-    const [round, setRound] = useState(1);
+  const [round, setRound] = useState(1);
+  const [P2Ends, setP2Ends] = useState(0);
 
-    // const [isReady, setIsReady] = useState(false)
-    // const [readyDuration, setReadyDuration] = useState(3);
-    const [countdownKey, setCountdownKey] = useState(0);
-    const [createDuration, setCreateDuration] = useState(10);
-    const [isCreating, setIsCreating] = useState(false);
-    const [followDuration, setFollowDuration] = useState(20);
-    const [isFollowing, setIsFollowing] = useState(false);
-    
-    const [notelistReceived, setNotelistReceived] = useState<{id: number, note: string}[]>([]);
-    const [score, setScore] = useState(0);
+  const [createDuration, setCreateDuration] = useState(5);
+  const [isCreating, setIsCreating] = useState(false);
+  const [followDuration, setFollowDuration] = useState(5);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isButtonClicked, setIsButtonClicked] = useState(false);
 
-    // Piano Function -------------------------------------
-    // Click note
-    const handleClickNote = (item: string) => {
-        const newNote = {id: notelist.length, note:item};
-        setNotelist([...notelist, newNote]); //Add in array
-    };
+  const [notelistReceived, setNotelistReceived] = useState<{ id: number; note: string }[]>([]);
 
-    // useEffect(() => {
-    //     const interval = setInterval(() => {
-    //         if (notelistReceived.length > 0) {
-    //             const nextIndex = (activeIndex + 1) % notelistReceived.length;
-    //             setActiveIndex(nextIndex);
-    //             console.log(activeIndex)
-    //         }
-    //     }, 500);
+  // Click note
+  const handleClickNote = (item: string) => {
+    const newNote = { id: notelist.length, note: item };
+    setNotelist([...notelist, newNote]); //Add in array
+  };
 
-    //     console.log("done")
-    //     return () => clearInterval(interval);
-    // }, [activeIndex, notelistReceived]);
+  // Ready
+  const handleReady = () => {
+    socket.emit("ready", "this player is ready");
+    setIsButtonClicked(true);
+  };
 
-    // Game system -------------------------------------
-    // First Player can start creating pattern
-    const handleStart = () => {
-        setIsP1(true);
-        setNotelist([]);
-        // setReadyDuration(3);
-        // setIsReady(true);
-    };
+  // First Player can start creating pattern
+  const handleStart = () => {
+    // setIsP1(true);
+    setNotelist([]);
+  };
 
-    // Socket event for sending notes
-    const sendNotelist = () => {
-        socket.emit("send_notelist", { roomId, notelist: notelist });
-        console.log("Notelist is sent", { roomId, notelist: notelist });
+  // Sending notes
+  const sendNotelist = () => {
+    socket.emit("send_notelist", { roomId, notelist: notelist });
+    console.log("Notelist is sent", { roomId, notelist: notelist });
+    setNotelist([]);
+    setIsCreating(false);
+  };
 
-        setNotelist([]);
-        setIsCreating(false);
-    };
+  // Socket event for
+  useEffect(() => {
+    // Starting the game after both are ready
+    socket.on("start_game", (data) => {
+      setIsCreating(true);
+      setNotelist([]);
+    });
 
-    // Scoring
-    const checkNotelist = (arrayReceived: {id: number, note: string}[], arraySubmit: {id: number, note: string}[]) => {
-        const minLenght = Math.min(arrayReceived.length, arraySubmit.length);
-        console.log("checkNotelist", arrayReceived, arraySubmit, minLenght);
+    socket.on('start_turn', (data) => {
+      setNotelist([]);
+      setIsCreating(true);
+    })
 
-        let updatedScore = score;
-        for (let i = 0; i < minLenght; i++) {
-            if (arrayReceived[i].id === arraySubmit[i].id && arrayReceived[i].note === arraySubmit[i].note) {
-                updatedScore++;
-            }
-        };
-        setScore(updatedScore);
-        setIsFollowing(false);
+    socket.on('next_round', (data) =>{
+      setRound(data.round);
+    })
 
-        if (isP1) {
-            if (round === 2) {
-                socket.emit("end_game", `${roomId} game ends`);
-            } else {
-                socket.emit("end_round", {roomId: roomId, round: round});
-                setRound(round + 1);
-            }
-        } else {
-            // end turn
-            setNotelist([]);
-            setIsCreating(true);
-        }
-    };
+    // Receiving notes
+    socket.on("receive_notelist", (data) => {
+      setNotelist([]);
+      setNotelistReceived(data.notelist);
+      console.log("receive_notelist", data);
+      setIsFollowing(true);
+    });
+  }, [socket]);
 
-    // Socket send reset command
-    const socketResetGame = () => {
-        socket.emit("reset", roomId)
-        console.log(`${roomId} reset game`)
-    };
+  const endTurn = (arrayReceived: {id: number, note: string}[], arraySubmit: {id: number, note: string}[]) => {
+    socket.emit('end_turn', {arrayReceived: arrayReceived, arraySubmit: arraySubmit});
+    setIsFollowing(false);
+  };
 
-    const resetGame = () => {
-        setNotelist([]);
-        setIsP1(false);
-        setRound(1);
-        setCreateDuration(10);
-        setFollowDuration(20);
-        setIsCreating(false);
-        setIsFollowing(false);
-        setNotelistReceived([]);
-        setScore(0);
-        setCountdownKey(countdownKey + 1);
-        console.log('reset game')
-    }
+  // Scoring
+  // const checkNotelist = (
+  //   arrayReceived: { id: number; note: string }[],
+  //   arraySubmit: { id: number; note: string }[]
+  // ) => {
+  //   const minLenght = Math.min(arrayReceived.length, arraySubmit.length);
+  //   console.log("checkNotelist", arrayReceived, arraySubmit, minLenght);
 
-    // Socket event for
-    useEffect(() => {
-        // Starting the game after both are ready
-        socket.on("start_game", (data) => {
-            setIsP1(true);
-            setNotelist([]);
-            // setReadyDuration(3);   
-            // setIsReady(true);
-        })
+  //   let updatedScore = score;
 
-        socket.on("start_round", (data) => {
-            setNotelist([]);
-            // setReadyDuration(3);
-            setCountdownKey(countdownKey + 1); 
-            // setIsReady(true);
-            setIsCreating(false);
-            setIsFollowing(false);
+  //   for (let i = 0; i < minLenght; i++) {
+  //     if (
+  //       arrayReceived[i].id === arraySubmit[i].id &&
+  //       arrayReceived[i].note === arraySubmit[i].note
+  //     ) {
+  //       updatedScore++;
+  //     }
+  //   }
 
-            console.log("start_round", data);
-        })
+  //   setScore(updatedScore);
+  //   setIsFollowing(false);
 
-        // Receiving notes
-        socket.on("receive_notelist", (data) => {
-            setNotelist([]);
-            setNotelistReceived(data.notelist);
-            console.log("receive_notelist", data);
-            // setReadyDuration(3);
-            // setIsReady(true);
-            setIsFollowing(true);
-        });
+  //   setP2Ends(P2Ends + 1);
 
-        socket.on("receive_reset", (data) => {
-            resetGame()
-        })
-    }, [socket]);
+  //   if (isP1) {
+  //     if (round === 2) {
+  //       socket.emit("end_game", updatedScore);
+  //     } else {
+  //       socket.emit("end_round", { roomId: roomId, round: round });
+  //       setRound(round + 1);
+  //     }
+  //   } else {
+  //     console.log("this turn ends");
+  //     setNotelist([]);
+  //     setIsCreating(true);
+
+  //     if (P2Ends === 1) {
+  //       socket.emit("end_3_turns", updatedScore);
+  //     }
+  //   }
+  // };
 
     return (
         <>
-            <div className='piano-container'>
-            {allnotes.map((item) => (
-                <div 
-                    key={item}
-                    onClick={() => {handleClickNote(item);}}
-                    // className={isActiveNote(item) ? "active" : ""}
-                >
-                    <div>{item}</div>
-                </div>
-            ))}
+            <div className="piano-container">
+                {allnotes.map((item) => (
+                    <div
+                        key={item}
+                        onClick={() => {handleClickNote(item);}}
+                    >
+                        <div>{item}</div>
+                    </div>
+                ))}
             </div>
             <button onClick={() => {setNotelist([])}}>Clear</button>
-            
+
             {/* countdown 3 sec before the turn start */}
             {/* <p>Starting in: </p>
-            <Countdown duration={3} running={isCurrentPlayer} onTimeout={() => {setIsCreating(true)}} /> */}
-            
-            <button onClick={handleStart}>Start</button>
-            <button onClick={socketResetGame}>Reset</button>
-        
-            <p>Create a pattern:</p> 
-            <Countdown key={`create_${countdownKey}`} duration={createDuration} running={isCreating || isP1} onTimeout={() => sendNotelist()} />
+                  <Countdown duration={3} running={isCurrentPlayer} onTimeout={() => {setIsCreating(true)}} /> */}
+            <ScoreBoard />
+
+            <button
+                onClick={handleReady}
+                className={isButtonClicked ? "button-clicked" : "button-default"}
+            >
+                {isButtonClicked
+                  ? "Waiting for the other player to be ready..."
+                  : "Ready"}
+            </button>
+            <p>Create a pattern:</p>
+            <Countdown
+                key={`create_${round}`}
+                duration={createDuration}
+                running={isCreating}
+                onTimeout={() => sendNotelist()}
+            />
             <p></p>
-            
+
             <h1>Display</h1>
-            <div className='piano-container'>
+            <div className="piano-container">
                 {notelist.map((item) => (
-                    <div key={item.id}><div>{item.note}</div></div>
+                    <div key={item.id}>
+                        <div>{item.note}</div>
+                    </div>
                 ))}
             </div>
-            <p>Waiting for another player to create a pattern</p>
+            <p>Waiting for ... to create a pattern</p>
 
             <p>Follow the pattern: </p>
-            <Countdown key={`follow_${countdownKey}`} duration={followDuration} running={isFollowing} onTimeout={() => checkNotelist(notelistReceived, notelist)} />
-            
+            <Countdown
+                key={`follow_${round}`}
+                duration={followDuration}
+                running={isFollowing}
+                onTimeout={() => endTurn(notelistReceived, notelist)}
+            />
+
             <h1>Received</h1>
-            <div className='piano-container'>
+            <div className="piano-container">
                 {notelistReceived.map((item) => (
-                    <div key={item.id}><div>{item.note}</div></div>
+                    <div key={item.id}>
+                        <div>{item.note}</div>
+                    </div>
                 ))}
             </div>
-
-            <p>score: {score}</p>
         </>
     );
 }
