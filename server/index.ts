@@ -14,17 +14,8 @@ const io = new Server(server, {
     }
 })
 
-// Conection
 const users: {sid: string, name: string, roomId: string, score: number}[] = [];
-
-// Join a room
-const rooms: {roomId: string, players:{sid: string}[]}[] = [
-    {roomId: "room 1", players: []},
-    {roomId: "room 2", players: []},
-    {roomId: "room 3", players: []},
-    {roomId: "room 4", players: []},
-    {roomId: "room 5", players: []},
-];
+const rooms: string[] = ["room 1", "room 2", "room 3", "room 4", "room 5"];
 
 io.on("connection", (socket) => {
     // Connection -------------------------------------
@@ -49,15 +40,7 @@ io.on("connection", (socket) => {
         if (userIndex !== -1) {
             const roomId = users[userIndex].roomId;
             users.splice(userIndex, 1);
-            
-            // Remove the user from the corresponding room in the rooms array
-            const roomIndex = rooms.findIndex((room) => room.roomId === roomId);
-            if (roomIndex !== -1) {
-                const playerIndex = rooms[roomIndex].players.findIndex((player) => player.sid === socket.id);
-                if (playerIndex !== -1) {
-                    rooms[roomIndex].players.splice(playerIndex, 1);
-                }
-            }
+
             const playersInRoom = users.filter((user) => user.roomId === roomId);
             console.log(`players in room ${roomId} =`)
             console.log(playersInRoom)
@@ -67,50 +50,57 @@ io.on("connection", (socket) => {
         }
         console.log("users: ");
         console.log(users);
-        console.log("rooms: ");
-        console.log(rooms);
 
         // Send the updated list of connected users to all clients
         io.emit('users', users);
     });
     // -------------------------------------
 
-    // Join a room -------------------------------------
+    // Room -------------------------------------
     socket.on("join_room", (data) => {
         socket.join(data);
         console.log(`${socket.id} join_room ${data}`);
 
-        // // Update the room property for the user in the users array
+        // /Update the room property for the user in the users array
         const userIndex = users.findIndex((user) => user.sid === socket.id);
         if (userIndex !== -1) {
             users[userIndex].roomId = data;
         }
 
-        console.log(users)
-        const player = {sid: socket.id}
-        let foundRoom = rooms.find((room) => room.roomId === data)
-        if (foundRoom) {
-            foundRoom.players.push(player)
-        } else {
-            foundRoom = {roomId: data, players:[player]}
-            rooms.push(foundRoom)
-        }
+        // Send the list of players in the room to the client who entered the room
+        const playersInRoom = users.filter((user) => user.roomId === data);
 
-        console.log("rooms: ");
-        console.log(rooms);
+        // Broadcasting the list of players in the room to all users in the room
+        io.to(data).emit('players_in_room', playersInRoom);
+
+        // Broadcasting the updated user
+        io.emit('users', users);
+    })
+
+    socket.on('leave_room', (data) => {
+        socket.leave(data);
+        console.log(`${socket.id} leave_room ${data}`);
+
+        // /Update the room property for the user in the users array
+        const userIndex = users.findIndex((user) => user.sid === socket.id);
+        if (userIndex !== -1) {
+            users[userIndex].roomId = "main";
+        }
 
         // Send the list of players in the room to the client who entered the room
         const playersInRoom = users.filter((user) => user.roomId === data);
         console.log(`players in room ${data} =`)
         console.log(playersInRoom)
 
-        // // Broadcasting the list of players in the room to all users in the room
+        // Broadcasting the list of players in the room to all users in the room
         io.to(data).emit('players_in_room', playersInRoom);
 
+        // Broadcasting the updated user
+        io.emit('users', users);
     })
     // -------------------------------------
 
-    // Each game -------------------------------------
+    // Game -------------------------------------
     socket.on("ready", (data) => {
         // player ready
     })

@@ -10,6 +10,7 @@ interface Props {
 function Piano({roomId}: Props) {
     const allnotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     const [notelist, setNotelist] = useState<{id: number, note: string}[]>([]);
+    const [activeIndex, setActiveIndex] = useState(0);
 
     const [isP1, setIsP1] = useState(false); //mod1
     const [round, setRound] = useState(1);
@@ -25,12 +26,27 @@ function Piano({roomId}: Props) {
     const [notelistReceived, setNotelistReceived] = useState<{id: number, note: string}[]>([]);
     const [score, setScore] = useState(0);
 
+    // Piano Function -------------------------------------
     // Click note
     const handleClickNote = (item: string) => {
         const newNote = {id: notelist.length, note:item};
         setNotelist([...notelist, newNote]); //Add in array
     };
 
+    // useEffect(() => {
+    //     const interval = setInterval(() => {
+    //         if (notelistReceived.length > 0) {
+    //             const nextIndex = (activeIndex + 1) % notelistReceived.length;
+    //             setActiveIndex(nextIndex);
+    //             console.log(activeIndex)
+    //         }
+    //     }, 500);
+
+    //     console.log("done")
+    //     return () => clearInterval(interval);
+    // }, [activeIndex, notelistReceived]);
+
+    // Game system -------------------------------------
     // First Player can start creating pattern
     const handleStart = () => {
         setIsP1(true);
@@ -76,7 +92,7 @@ function Piano({roomId}: Props) {
         }
     };
 
-    // Socket sent
+    // Socket send reset command
     const socketResetGame = () => {
         socket.emit("reset", roomId)
         console.log(`${roomId} reset game`)
@@ -136,11 +152,16 @@ function Piano({roomId}: Props) {
         <>
             <div className='piano-container'>
             {allnotes.map((item) => (
-                <div key={item} onClick={() => {handleClickNote(item);}}>
+                <div 
+                    key={item}
+                    onClick={() => {handleClickNote(item);}}
+                    // className={isActiveNote(item) ? "active" : ""}
+                >
                     <div>{item}</div>
                 </div>
             ))}
             </div>
+            <button onClick={() => {setNotelist([])}}>Clear</button>
             
             {/* countdown 3 sec before the turn start */}
             {/* <p>Starting in: </p>
@@ -159,7 +180,7 @@ function Piano({roomId}: Props) {
                     <div key={item.id}><div>{item.note}</div></div>
                 ))}
             </div>
-            <p>Waiting for ... to create a pattern</p>
+            <p>Waiting for another player to create a pattern</p>
 
             <p>Follow the pattern: </p>
             <Countdown key={`follow_${countdownKey}`} duration={followDuration} running={isFollowing} onTimeout={() => checkNotelist(notelistReceived, notelist)} />
